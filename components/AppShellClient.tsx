@@ -20,7 +20,7 @@ type AppShellClientProps = {
 };
 
 export default function AppShellClient({ userName, brandData: initialBrandData, children }: AppShellClientProps) {
-  const { t, dir } = useLanguage();
+  const { t, direction } = useLanguage();
   const [brandData, setBrandData] = useState(initialBrandData);
 
   // Listen for logo update events and refresh immediately
@@ -40,9 +40,9 @@ export default function AppShellClient({ userName, brandData: initialBrandData, 
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-background" dir={dir}>
+    <div className="flex min-h-screen bg-background" dir={direction}>
       {/* Sidebar */}
-      <aside className={`fixed ${dir === "rtl" ? "right-0" : "left-0"} top-0 z-40 h-screen w-64 border-${dir === "rtl" ? "l" : "r"} border-border bg-card`}>
+      <aside className={`fixed ${direction === "rtl" ? "right-0" : "left-0"} top-0 z-40 h-screen w-64 border-${direction === "rtl" ? "l" : "r"} border-border bg-card`}>
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center gap-2 border-b border-border px-6">
@@ -74,50 +74,50 @@ export default function AppShellClient({ userName, brandData: initialBrandData, 
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/dashboard"
             >
               <LayoutDashboard className="h-5 w-5" />
               {t("dashboard")}
             </Link>
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/revenue"
             >
               <TrendingUp className="h-5 w-5" />
               {t("revenue")}
             </Link>
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/costs"
             >
               <TrendingDown className="h-5 w-5" />
               {t("costs")}
             </Link>
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/wallets"
             >
               <Wallet className="h-5 w-5" />
               {t("wallets")}
             </Link>
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/salaries"
             >
               <Users className="h-5 w-5" />
               {t("salaries")}
             </Link>
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/finance-inputs"
             >
               <Landmark className="h-5 w-5" />
               {t("finance")}
             </Link>
-            <Link 
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" 
+            <Link
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               href="/integrations"
             >
               <Plug className="h-5 w-5" />
@@ -138,7 +138,7 @@ export default function AppShellClient({ userName, brandData: initialBrandData, 
       </aside>
 
       {/* Main Content Area */}
-      <div className={`${dir === "rtl" ? "mr-64" : "ml-64"} flex-1`}>
+      <div className={`${direction === "rtl" ? "mr-64" : "ml-64"} flex-1`}>
         {/* Top Header Bar */}
         <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-16 items-center justify-end gap-2 px-6">

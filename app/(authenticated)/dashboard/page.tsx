@@ -169,7 +169,7 @@ export default function Dashboard() {
                         value={formatCurrency(data?.totals.profit || 0)}
                         icon={PiggyBank}
                         trend=""
-                        trendUp={data?.totals.profit >= 0}
+                        trendUp={(data?.totals.profit ?? 0) >= 0}
                         delay={240}
                     />
                 </div>

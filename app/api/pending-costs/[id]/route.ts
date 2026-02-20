@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { requireBrandId, requireUser } from "@/lib/brand";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await supabaseServer();
   const user = await requireUser(supabase);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -105,7 +106,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     if (basicWallet) {
       const newBalance = basicWallet.current_balance - pendingCost.amount;
-      
+
       await supabase
         .from("wallets")
         .update({ current_balance: newBalance })
@@ -128,7 +129,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       // Check and update wallet's individual monthly budget
       if (basicWallet.monthly_budget) {
         const month = pendingCost.payment_date.slice(0, 7); // YYYY-MM
-        
+
         // Get total costs deducted from this wallet for the current month
         const { data: walletMonthlyCosts } = await supabase
           .from("wallet_transactions")

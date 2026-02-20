@@ -94,6 +94,22 @@ const translations: Record<string, Record<Language, string>> = {
   "label.role": { en: "Role", ar: "الدور" },
   "label.welcome": { en: "Welcome to Eradaty", ar: "مرحباً بك في إراداتي" },
   "label.onboardingDesc": { en: "Let's set up your account to get started with managing your ecommerce finances.", ar: "لنقم بإعداد حسابك لبدء إدارة ماليات التجارة الإلكترونية." },
+  "label.forgotPassword": { en: "Forgot Password?", ar: "نسيت كلمة المرور؟" },
+  "label.resetPassword": { en: "Reset Password", ar: "إعادة تعيين كلمة المرور" },
+  "label.sendResetLink": { en: "Send Reset Link", ar: "إرسال رابط إعادة التعيين" },
+  "label.backToLogin": { en: "Back to Login", ar: "الرجوع لتسجيل الدخول" },
+  "signOut": { en: "Sign Out", ar: "تسجيل الخروج" },
+  "label.loginDesc": { en: "Enter your email below to login to your account", ar: "أدخل بريدك الإلكتروني أدناه لتسجيل الدخول إلى حسابك" },
+  "label.orContinueWith": { en: "Or continue with", ar: "أو المتابعة باستخدام" },
+  "label.google": { en: "Google", ar: "جوجل" },
+  "label.apple": { en: "Apple", ar: "أبل" },
+  "label.facebook": { en: "Facebook", ar: "فيسبوك" },
+  "label.microsoft": { en: "Microsoft", ar: "مايكروسوفت" },
+  "label.loading": { en: "Loading...", ar: "جاري التحميل..." },
+  "label.noAccount": { en: "Don't have an account?", ar: "ليس لديك حساب؟" },
+  "label.haveAccount": { en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
+  "label.signupDesc": { en: "Create an account to get started", ar: "أنشئ حساباً للبدء" },
+  "label.yourName": { en: "Your full name", ar: "اسمك الكامل" },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

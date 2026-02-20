@@ -7,29 +7,18 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useApi } from "@/hooks/useApi";
 import { EradatyLogo } from "@/components/EradatyLogo";
-import {
-  LayoutDashboard,
-  TrendingUp,
-  Receipt,
-  Wallet,
-  Users,
-  PieChart,
-  Plug,
-  Bell,
-  User,
-  Menu,
-  X,
-  LogOut,
-} from "lucide-react";
+import { navItems } from "@/lib/nav"; // Imported from shared config
+import { Menu, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface ProfileData {
   user: {
     email: string;
     full_name: string | null;
+    avatar_url: string | null;
     created_at: string;
   };
   brand: {
@@ -39,18 +28,9 @@ interface ProfileData {
     description: string | null;
     created_at: string;
   } | null;
+  role?: string;
+  allowed_pages?: string[] | null;
 }
-
-const navItems = [
-  { key: "nav.dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { key: "nav.revenue", path: "/revenue", icon: TrendingUp },
-  { key: "nav.costs", path: "/costs", icon: Receipt },
-  { key: "nav.wallets", path: "/wallets", icon: Wallet },
-  { key: "nav.salaries", path: "/salaries", icon: Users },
-  { key: "nav.finance", path: "/finance-inputs", icon: PieChart },
-  { key: "nav.integrations", path: "/integrations", icon: Plug },
-  { key: "nav.notifications", path: "/notifications", icon: Bell },
-];
 
 function SidebarContent({ onNavigate, profileData }: { onNavigate?: () => void; profileData?: ProfileData | null }) {
   const { t } = useLanguage();
@@ -66,7 +46,24 @@ function SidebarContent({ onNavigate, profileData }: { onNavigate?: () => void; 
     : profileData?.user.email?.slice(0, 2).toUpperCase() || "??";
 
   const userName = profileData?.user.full_name || profileData?.user.email || "User";
+  const userAvatar = profileData?.user.avatar_url;
   const brandName = profileData?.brand?.name || "Brand";
+
+  // Filter navigation items based on permissions
+  const allowed = profileData?.allowed_pages;
+  const userRole = profileData?.role || 'viewer';
+
+  const filteredNavItems = navItems.filter(item => {
+    // Owner and Admin have full access
+    if (userRole === 'owner' || userRole === 'admin') return true;
+
+    // Check specific permissions if defined
+    // If allowed is null/undefined, default to full access (backward compatibility)
+    // If allowed is array, check if path is included
+    if (!allowed) return true;
+
+    return allowed.includes(item.path);
+  });
 
   return (
     <div className="flex flex-col h-full">
@@ -80,7 +77,7 @@ function SidebarContent({ onNavigate, profileData }: { onNavigate?: () => void; 
         <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
           {t("label.menu")}
         </p>
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive = pathname === item.path || (item.path !== "/dashboard" && pathname?.startsWith(item.path));
           return (
             <Link
@@ -123,16 +120,31 @@ function SidebarContent({ onNavigate, profileData }: { onNavigate?: () => void; 
             pathname === "/profile" && "bg-sidebar-accent"
           )}
         >
-          <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground font-semibold text-xs">{userInitials}</span>
+          <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shadow-sm overflow-hidden shrink-0">
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-primary-foreground font-semibold text-xs">{userInitials}</span>
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
             <p className="text-[11px] text-muted-foreground truncate">{brandName}</p>
           </div>
         </Link>
+
+        <form action="/api/auth/signout" method="post">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 px-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+            type="submit"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            <span className="text-sm font-medium">{t("signOut")}</span>
+          </Button>
+        </form>
       </div>
-    </div>
+    </div >
   );
 }
 

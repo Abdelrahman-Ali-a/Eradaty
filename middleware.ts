@@ -41,8 +41,14 @@ export async function middleware(req: NextRequest) {
   const { data } = await supabase.auth.getUser();
   const user = data.user;
 
-  // Allow access to auth pages
-  if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
+  // Allow access to auth pages including password reset flow
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/update-password")
+  ) {
     return res;
   }
 
@@ -50,6 +56,17 @@ export async function middleware(req: NextRequest) {
   if (!user) {
     const u = new URL("/login", req.url);
     return NextResponse.redirect(u);
+  }
+
+  // Force Logout Check (Owner Termination)
+  const terminatedAt = user.app_metadata?.last_terminated_at;
+  if (terminatedAt) {
+    const lastSignIn = new Date(user.last_sign_in_at || 0).getTime();
+    if (terminatedAt > lastSignIn) {
+      const u = new URL("/login", req.url);
+      u.searchParams.set("message", "session_terminated");
+      return NextResponse.redirect(u);
+    }
   }
 
   // Check if user has completed onboarding (has a brand)
@@ -60,7 +77,22 @@ export async function middleware(req: NextRequest) {
       .eq("owner_user_id", user.id)
       .maybeSingle();
 
-    if (!brand?.id) {
+    let hasAccess = !!brand?.id;
+
+    if (!hasAccess) {
+      // Check if user is a member of any brand
+      const { data: member } = await supabase
+        .from("brand_members")
+        .select("brand_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (member?.brand_id) {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
       const u = new URL("/onboarding", req.url);
       return NextResponse.redirect(u);
     }

@@ -1,8 +1,8 @@
 "use client";
 
-
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUser } from "@/contexts/UserContext";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,13 +28,15 @@ const assetItems = [
   { id: 3, name: "Inventory", amount: "SAR 120,000", date: "2025-01-01" },
 ];
 
-function FinanceTable({ items, t }: { items: { id: number; name: string; amount: string; date: string }[]; t: (k: string) => string }) {
+function FinanceTable({ items, t, canEdit }: { items: { id: number; name: string; amount: string; date: string }[]; t: (k: string) => string; canEdit: boolean }) {
   const [addOpen, setAddOpen] = useState(false);
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild><Button size="sm" className="rounded-xl"><Plus className="w-4 h-4 me-1.5" />{t("action.add")}</Button></DialogTrigger>
+          {canEdit && (
+            <DialogTrigger asChild><Button size="sm" className="rounded-xl"><Plus className="w-4 h-4 me-1.5" />{t("action.add")}</Button></DialogTrigger>
+          )}
           <DialogContent className="rounded-2xl">
             <DialogHeader><DialogTitle>{t("action.add")}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-2">
@@ -67,8 +69,12 @@ function FinanceTable({ items, t }: { items: { id: number; name: string; amount:
                     <TableCell>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-7 w-7"><Eye className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                        {canEdit && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -84,6 +90,8 @@ function FinanceTable({ items, t }: { items: { id: number; name: string; amount:
 
 export default function Finance() {
   const { t } = useLanguage();
+  const { role } = useUser();
+  const canEdit = role === 'owner' || role === 'admin' || role === 'editor';
 
   return (
     <div className="space-y-6">
@@ -94,9 +102,9 @@ export default function Finance() {
           <TabsTrigger value="capital" className="rounded-lg">{t("label.workingCapital")}</TabsTrigger>
           <TabsTrigger value="assets" className="rounded-lg">{t("label.assets")}</TabsTrigger>
         </TabsList>
-        <TabsContent value="equity" className="mt-4"><FinanceTable items={equityItems} t={t} /></TabsContent>
-        <TabsContent value="capital" className="mt-4"><FinanceTable items={capitalItems} t={t} /></TabsContent>
-        <TabsContent value="assets" className="mt-4"><FinanceTable items={assetItems} t={t} /></TabsContent>
+        <TabsContent value="equity" className="mt-4"><FinanceTable items={equityItems} t={t} canEdit={canEdit} /></TabsContent>
+        <TabsContent value="capital" className="mt-4"><FinanceTable items={capitalItems} t={t} canEdit={canEdit} /></TabsContent>
+        <TabsContent value="assets" className="mt-4"><FinanceTable items={assetItems} t={t} canEdit={canEdit} /></TabsContent>
       </Tabs>
     </div>
   );
