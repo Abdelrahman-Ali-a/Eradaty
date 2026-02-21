@@ -47,7 +47,8 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/signup") ||
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/forgot-password") ||
-    pathname.startsWith("/update-password")
+    pathname.startsWith("/update-password") ||
+    pathname.startsWith("/auth/akedly")
   ) {
     return res;
   }

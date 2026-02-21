@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { EradatyLogo } from "@/components/EradatyLogo";
@@ -10,19 +11,51 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Globe, Moon, Sun, AlertCircle } from "lucide-react";
+import { Globe, Moon, Sun, AlertCircle, X, Loader2, Phone } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export default function Signup() {
+function SignupContent() {
   const { t, language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  // Check for error from Akedly callback redirect
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam === "phone_verification_failed") {
+      setError(t("label.verificationFailed"));
+    }
+  }, [searchParams, t]);
+
+  // Listen for postMessage from Akedly iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://auth.akedly.io") return;
+
+      if (event.data.type === "AUTH_SUCCESS") {
+        console.log("Akedly OTP verification successful!", event.data);
+        setShowOtpModal(false);
+        router.push("/onboarding");
+      } else if (event.data.type === "AUTH_FAILED") {
+        setShowOtpModal(false);
+        setError(t("label.verificationFailed"));
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [router, t]);
 
   const handleSocialLogin = async (provider: 'google' | 'apple' | 'facebook' | 'azure') => {
     setLoading(true);
@@ -42,6 +75,40 @@ export default function Signup() {
     }
   };
 
+  const startPhoneVerification = async () => {
+    setOtpLoading(true);
+    setError(null);
+    try {
+      // Format phone number to E.164 if it doesn't start with +
+      let formattedPhone = phone.trim();
+      if (!formattedPhone.startsWith("+")) {
+        formattedPhone = "+20" + formattedPhone; // Default to Egypt country code
+      }
+
+      const response = await fetch("/api/auth/akedly/create-attempt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: formattedPhone,
+          email: email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to start phone verification");
+      }
+
+      setIframeUrl(data.iframeUrl);
+      setShowOtpModal(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to start phone verification");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -50,6 +117,12 @@ export default function Signup() {
     try {
       const supabase = supabaseBrowser();
 
+      // Format phone number
+      let formattedPhone = phone.trim();
+      if (!formattedPhone.startsWith("+")) {
+        formattedPhone = "+20" + formattedPhone;
+      }
+
       // Sign up the user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -57,6 +130,7 @@ export default function Signup() {
         options: {
           data: {
             name: name,
+            phone: formattedPhone,
           },
         },
       });
@@ -73,8 +147,9 @@ export default function Signup() {
         return;
       }
 
-      // Successfully signed up, redirect to onboarding
-      router.push("/onboarding");
+      // Account created successfully — now verify phone via Akedly
+      await startPhoneVerification();
+      setLoading(false);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
       setLoading(false);
@@ -163,12 +238,38 @@ export default function Signup() {
                   className="rounded-xl"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t("label.phoneNumber")}</Label>
+                <div className="flex gap-2">
+                  <div className="flex items-center px-3 rounded-xl border bg-muted text-sm text-muted-foreground min-w-[60px] justify-center">
+                    +20
+                  </div>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder={t("label.phonePlaceholder")}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                    required
+                    disabled={loading}
+                    className="rounded-xl flex-1"
+                    maxLength={15}
+                  />
+                </div>
+              </div>
               <Button
                 type="submit"
                 className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                disabled={loading}
+                disabled={loading || otpLoading}
               >
-                {loading ? t("label.loading") || "Loading..." : t("action.signup")}
+                {loading || otpLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("label.loading") || "Loading..."}
+                  </span>
+                ) : (
+                  t("action.signup")
+                )}
               </Button>
             </form>
 
@@ -241,6 +342,56 @@ export default function Signup() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Akedly OTP Verification Modal */}
+      {showOtpModal && iframeUrl && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowOtpModal(false);
+          }}
+        >
+          <div className="relative w-full max-w-[500px] h-[700px] mx-4 animate-in zoom-in-95 duration-300">
+            {/* Close button */}
+            <button
+              onClick={() => setShowOtpModal(false)}
+              className="absolute -top-3 -right-3 z-10 bg-background border border-border rounded-full p-1.5 shadow-lg hover:bg-muted transition-colors"
+              aria-label={t("label.closeModal")}
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 rounded-full p-2">
+                  <Phone className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{t("label.otpVerification")}</h3>
+                  <p className="text-sm text-blue-100">{t("label.otpDescription")}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Iframe */}
+            <iframe
+              src={iframeUrl}
+              className="w-full border-none bg-white rounded-b-2xl"
+              style={{ height: "calc(100% - 76px)" }}
+              allow="clipboard-write"
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={null}>
+      <SignupContent />
+    </Suspense>
   );
 }

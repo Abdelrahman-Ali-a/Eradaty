@@ -110,6 +110,13 @@ const translations: Record<string, Record<Language, string>> = {
   "label.haveAccount": { en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
   "label.signupDesc": { en: "Create an account to get started", ar: "أنشئ حساباً للبدء" },
   "label.yourName": { en: "Your full name", ar: "اسمك الكامل" },
+  "label.phonePlaceholder": { en: "Enter your phone number", ar: "أدخل رقم هاتفك" },
+  "label.verifyPhone": { en: "Verify Phone Number", ar: "تحقق من رقم الهاتف" },
+  "label.otpVerification": { en: "OTP Verification", ar: "التحقق من الرمز" },
+  "label.otpDescription": { en: "Please verify your phone number to continue", ar: "يرجى التحقق من رقم هاتفك للمتابعة" },
+  "label.verificationFailed": { en: "Phone verification failed. Please try again.", ar: "فشل التحقق من الهاتف. حاول مرة أخرى." },
+  "label.phoneNumber": { en: "Phone Number", ar: "رقم الهاتف" },
+  "label.closeModal": { en: "Close", ar: "إغلاق" },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
