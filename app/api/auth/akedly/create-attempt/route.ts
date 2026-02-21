@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import crypto from "crypto";
 
 const AKEDLY_API_KEY = process.env.AKEDLY_API_KEY!;
@@ -26,38 +24,8 @@ function generateSignature(
 
 export async function POST(request: NextRequest) {
     try {
-        // Verify user is authenticated
-        const cookieStore = await cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll();
-                    },
-                    setAll(cookiesToSet: Array<{ name: string; value: string; options: any }>) {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    },
-                },
-            }
-        );
-
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: "Unauthorized" },
-                { status: 401 }
-            );
-        }
-
         const body = await request.json();
-        const { phoneNumber, email } = body;
+        const { phoneNumber, email, userId } = body;
 
         if (!phoneNumber) {
             return NextResponse.json(
@@ -106,10 +74,10 @@ export async function POST(request: NextRequest) {
                     },
                     digits: 6,
                     publicMetadata: {
-                        userId: user.id,
+                        userId: userId || null,
                     },
                     privateMetadata: {
-                        supabaseUserId: user.id,
+                        supabaseUserId: userId || null,
                         phoneNumber,
                     },
                 }),

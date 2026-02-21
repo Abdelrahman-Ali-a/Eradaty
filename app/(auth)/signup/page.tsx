@@ -75,7 +75,7 @@ function SignupContent() {
     }
   };
 
-  const startPhoneVerification = async () => {
+  const startPhoneVerification = async (userId?: string) => {
     setOtpLoading(true);
     setError(null);
     try {
@@ -91,6 +91,7 @@ function SignupContent() {
         body: JSON.stringify({
           phoneNumber: formattedPhone,
           email: email,
+          userId: userId,
         }),
       });
 
@@ -148,7 +149,7 @@ function SignupContent() {
       }
 
       // Account created successfully — now verify phone via Akedly
-      await startPhoneVerification();
+      await startPhoneVerification(data.user.id);
       setLoading(false);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
@@ -158,12 +159,7 @@ function SignupContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="px-3 py-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800">
-            <EradatyLogo className="h-7 w-auto" />
-          </div>
-        </div>
+      <header className="flex items-center justify-end px-6 py-4">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={() => setLanguage(language === "en" ? "ar" : "en")} className="rounded-xl">
             <Globe className="w-4 h-4" />
@@ -180,8 +176,8 @@ function SignupContent() {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-[420px] shadow-premium rounded-2xl border animate-scale-in">
           <CardHeader className="text-center space-y-3 pb-2">
-            <div className="w-32 h-20 mx-auto mb-2 flex items-center justify-center px-4 py-3 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800">
-              <EradatyLogo className="w-full h-auto" />
+            <div className="flex justify-center mb-2">
+              <EradatyLogo className="w-48 max-w-full h-auto" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold">{t("action.signup")}</CardTitle>

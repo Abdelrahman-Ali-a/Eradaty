@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
             // Convert file to base64
             const base64Image = await fileToBase64(file);
 
-            // Process with OCR
-            const ocrResult = await processInvoiceWithOCR(base64Image, context);
+            // Process with OCR (pass MIME type for correct data URI)
+            const ocrResult = await processInvoiceWithOCR(base64Image, context, file.type);
 
             const processingTime = Date.now() - startTime;
 
