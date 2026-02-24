@@ -3,10 +3,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
-    // if "next" is in search params, use it as the redirection URL
     const next = searchParams.get("next") ?? "/dashboard";
+    // Use production URL — request.url origin resolves to internal host on Render
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`;
 
     if (code) {
         const cookieStore = await cookies();
@@ -28,10 +29,10 @@ export async function GET(request: Request) {
         );
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`);
+            return NextResponse.redirect(`${siteUrl}${next}`);
         }
     }
 
     // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`);
+    return NextResponse.redirect(`${siteUrl}/login?error=Could not authenticate user`);
 }
